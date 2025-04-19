@@ -1,16 +1,17 @@
-import React, { version } from "react";
+import React from "react";
 import { Button, Col, Row , Form} from "react-bootstrap";
 import useXlsx from "../helpers/useXlsx";
 import TableModel from "../components/TableModel";
 import { headerTablePreviewAddress } from "../models/headerTablePrevieAddress";
 import { servicesGeolocation } from "../services/servicesGeolocation";
 import Swal from "sweetalert2";
-import { redirect } from "react-router-dom";
+
+
 
 const DataCoordenates = () => {
     const { exportToXlsx, readXlsx } = useXlsx();
     const [data, setData] = React.useState([]);
-
+    const MAX_ROWS = 50;
     const exportTemplate = () => {
         const data = [["Calle", "No. Ext.", "Colonia", "Ciudad", "Estado", "País", "CP"]]
         const widthColumns = [30, 10, 25, 20,20,20,10]
@@ -37,39 +38,35 @@ const DataCoordenates = () => {
             }
           });
 
-        const newData = []
         try {
-            const totalAddress = address.length;
-            let currentAddress = 0;
-            address.forEach(async (row) => {
+
+
+            const promises = address.map(async (row) => {
                 try {
+                  const response = await servicesGeolocation.getCoordinates({ params: row });
+                  return {
+                    ...row,
+                    latitude: response?.[0]?.lat ?? null,
+                    longitude: response?.[0]?.lon ?? null,
+                  };
+                } catch (err) {
+                  console.error("Error individual:", err);
+                  return {
+                    ...row,
+                    latitude: null,
+                    longitude: null,
+                  };
+                }
+              });
 
-                    const response = await servicesGeolocation.getCoordinates({params: row} );
-                    currentAddress++;
-                    if(!!response) {
-                        row.latitude = response[0].lat;
-                        row.longitude = response[0].lon;
-                    } 
-                    else {
-                    row.latitude = null;
-                    row.longitude = null;
-                }
-                newData.push(row);
-                }
-                catch{
-                    console.log("error", error)
-                } finally {
-                    if(currentAddress === totalAddress) {
-                        setData(newData);
-                        Swal.close();
-                    }
-                }
-            })
-
+              const results = await Promise.all(promises);
+            setData(results);
+            Swal.close();
 
 
         } catch(error) {
             console.log(error)
+            Swal.close();
         }
         
     }
@@ -80,8 +77,14 @@ const DataCoordenates = () => {
     }
 
     const formatData = (data) => {
-        const formattedData = data.map((row) => {
-            return {
+        
+        const formattedData = [];
+        for (const row of data) {
+            if (row[0] === "" || row[0] === null || formattedData.length >= MAX_ROWS) {
+                break; 
+            }
+    
+            formattedData.push({
                 id: Math.random(),
                 streetOrigin: row[0],
                 noExt: row[1],
@@ -90,8 +93,8 @@ const DataCoordenates = () => {
                 state: row[4],
                 country: row[5],
                 postalCode: row[6],
-            }
-        })
+            });
+        }
 
         setData(formattedData);
     }
