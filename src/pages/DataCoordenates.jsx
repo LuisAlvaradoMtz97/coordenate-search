@@ -37,7 +37,6 @@ const DataCoordenates = () => {
             }
           });
 
-        console.log("dataWhitAddress", address)
         const newData = []
         try {
             const totalAddress = address.length;
