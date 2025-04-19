@@ -1,5 +1,5 @@
 import axios from 'axios';
-const urlCoordenates = 'http://nominatim.openstreetmap.org/'
+const urlCoordenates = 'https://nominatim.openstreetmap.org/'
 
 export const servicesGeolocation = {
     getCoordinates: async ({ params}) => {
