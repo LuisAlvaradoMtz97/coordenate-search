@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router";
+import { Routes, Route } from "react-router-dom";
 import DataCoordenates from "../pages/DataCoordenates.jsx";
 import Map from "../pages/Map.jsx";
 const AppRouter = () => {
