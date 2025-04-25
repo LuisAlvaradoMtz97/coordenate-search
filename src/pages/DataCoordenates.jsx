@@ -146,7 +146,7 @@ const DataCoordenates = () => {
 
     return (
         <>
-            <Row className="pt-2 align-items-center">
+            <Row className="mt-3 align-items-center">
                 <Col xs={12} md={6}>
                     <h1>Obtencion de coordenadas</h1>
                     <p>Para poder proceder con la obtención de las coordenadas,

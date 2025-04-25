@@ -3,3 +3,10 @@
   margin: 0 auto;
   padding: 20px;
 }
+
+.card:hover {
+  transform: scale(1.05);
+  transition: transform 0.5s;
+  cursor: pointer;
+  background-color: #f0f0f0;
+}
