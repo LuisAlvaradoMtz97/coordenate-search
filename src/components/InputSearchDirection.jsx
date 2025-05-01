@@ -7,42 +7,54 @@ const InputSearchDirection = (props) => {
     const [viewOptions, setViewOptions] = useState(false);
     const [valueSearch, setValueSearch] = useState('');
     const [addresses, setAddresses] = useState([]);
-    const abortControllerRef = React.useRef(null); 
+    
     const [abortController, setAbortController] = useState(null);
+    const [optionAddress, setOptionAddress] = useState([]);
+    const debounceTimeoutRef = useRef(null); // Referencia para el timeout del debounce
 
 
-    useEffect(() => {
-        if(valueSearch.length > 0){
-          
-       
-          if (abortControllerRef.current) {
-            abortControllerRef.current.abort();
-          }
-            setViewOptions(true);
-            searchAddress();
-        }
-        else{
-            setViewOptions(false);
-        }
-    }, [valueSearch]);
+
+    const handleAdress = (e) => {
+      const address = e.target.value;
+      setValueSearch(address);
+
+      // Si el usuario borra el texto, limpiar resultados y ocultar opciones
+      if (address.length === 0) {
+          setViewOptions(false);
+          setOptionAddress([]);
+          return;
+      }
+
+      // Limpiar el timeout anterior si el usuario sigue escribiendo
+      if (debounceTimeoutRef.current) {
+          clearTimeout(debounceTimeoutRef.current);
+      }
+
+      // Configurar un nuevo timeout para ejecutar la búsqueda después de 500ms
+      debounceTimeoutRef.current = setTimeout(() => {
+          searchAddress();
+      }, 500); // 500ms de espera
+  };
+
 
     const searchAddress = async () => {
       try{
-        const controller = new AbortController();
-        abortControllerRef.current = controller;
+        // const controller = new AbortController();
+        // abortControllerRef.current = controller;
 
-        const response = await servicesGeolocation.getCoordinates({ 
-          params: { q: valueSearch, format: 'json' },
-          signal: controller.signal, 
+        const response = await servicesGeolocation.searchCoordenates({ 
+          search: valueSearch 
       });
-        console.log(response);
+
+
+      console.log("respuesta", response)
+        setOptionAddress(response?.results || []);
+        setViewOptions(response?.results?.length > 0);
       } catch(error){
         console.error("Error fetching coordinates:", error);
       }
     }
-    const handleAdress = (e) => {
-        setValueSearch(e.target.value);
-    }
+  
     return (
         <>
 <Form.Control
@@ -53,10 +65,13 @@ const InputSearchDirection = (props) => {
         className="mt-3"
         placeholder="Buscar dirección"
       />
-    <Dropdown.Menu show={viewOptions}>
-      <Dropdown.Item eventKey="2">Another action kasdhkshdfksdhfksdfksdfkkjhsfksd</Dropdown.Item>
-      <Dropdown.Item eventKey="3">Something else here</Dropdown.Item>
-    </Dropdown.Menu>
+    <Dropdown.Menu show={viewOptions && optionAddress.length > 0}>
+    {optionAddress.length > 0 && optionAddress.map((address, index) => (
+        <Dropdown.Item key={index} eventKey={index}>
+          {address?.annotations?.flag} - {address.formatted}
+        </Dropdown.Item>
+      ))}
+       </Dropdown.Menu>
         
         </>
         
