@@ -1,19 +1,22 @@
 import React, {useEffect, useState, useRef} from "react";
 import { ButtonGroup, Button, Dropdown , Form} from "react-bootstrap";
 import {servicesGeolocation} from "../services/servicesGeolocation";
+import 'react-bootstrap-typeahead/css/Typeahead.css';
 
 const InputSearchDirection = (props) => {   
     const { placeholder, value, onChange } = props;
     const [viewOptions, setViewOptions] = useState(false);
     const [valueSearch, setValueSearch] = useState('');
     const [addresses, setAddresses] = useState([]);
-    
+
     const [abortController, setAbortController] = useState(null);
     const [optionAddress, setOptionAddress] = useState([]);
     const debounceTimeoutRef = useRef(null); // Referencia para el timeout del debounce
 
+    const options = optionAddress.map((address) => `${address?.annotations?.flag} - ${address.formatted}`);
 
 
+    //Funcion dedicada a realizar la busqueda de direcciones
     const handleAdress = (e) => {
       const address = e.target.value;
       setValueSearch(address);
@@ -37,6 +40,7 @@ const InputSearchDirection = (props) => {
   };
 
 
+    //Manda la peticion para obtener las direcciones
     const searchAddress = async () => {
       try{
         // const controller = new AbortController();
@@ -54,6 +58,13 @@ const InputSearchDirection = (props) => {
         console.error("Error fetching coordinates:", error);
       }
     }
+
+    //Se agrega la direccion al listado
+    const addAddress = (address) => {
+      setAddresses((prevAddresses) => [...prevAddresses, address]);
+      setValueSearch('');
+      setViewOptions(false);
+    }
   
     return (
         <>
@@ -62,12 +73,17 @@ const InputSearchDirection = (props) => {
         id="inputPassword5"
         aria-describedby="passwordHelpBlock"
         onChange={handleAdress}
+        value={valueSearch}
         className="mt-3"
         placeholder="Buscar dirección"
       />
-    <Dropdown.Menu show={viewOptions && optionAddress.length > 0}>
+    <Dropdown.Menu show={viewOptions && optionAddress.length > 0} focusFirstItemOnShow={true} >
     {optionAddress.length > 0 && optionAddress.map((address, index) => (
-        <Dropdown.Item key={index} eventKey={index}>
+        <Dropdown.Item key={index} eventKey={index} 
+        onClick={() => {
+            addAddress(address)
+        }}
+        >
           {address?.annotations?.flag} - {address.formatted}
         </Dropdown.Item>
       ))}
