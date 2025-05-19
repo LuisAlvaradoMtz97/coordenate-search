@@ -5,12 +5,13 @@ import TableModel from "../components/TableModel";
 import { headerTablePreviewAddress } from "../models/headerTablePrevieAddress";
 import { servicesGeolocation } from "../services/servicesGeolocation";
 import Swal from "sweetalert2";
-
+import { useListTableAtom } from "../atoms/useListTableAtom";
 
 
 const DataCoordenates = () => {
+    const [listTable, setListTable] = useListTableAtom();
     const { exportToXlsx, readXlsx } = useXlsx();
-    const [data, setData] = React.useState([]);
+
     const MAX_ROWS = 50;
     const exportTemplate = () => {
         const data = [["Calle", "No. Ext.", "Colonia", "Ciudad", "Estado", "País", "CP"]]
@@ -22,12 +23,9 @@ const DataCoordenates = () => {
 
     const getCoordenates =async () => {
 
-       const address = data.map((row) => ({
+       const address = listTable.map((row) => ({
         ...row,   
-        street : `${row.streetOrigin} ${row.noExt}`,
-        county: row.district,
-        postalcode: row.postalCode,
-        format:"json"
+        search: `${row.streetOrigin} ${row.noExt}, ${row.district}, ${row.city}, ${row.state}, ${row.country}, ${row.postalCode}`,
         }))
         Swal.fire({
             title: 'Obteniendo coordenadas...',
@@ -43,12 +41,14 @@ const DataCoordenates = () => {
 
             const promises = address.map(async (row) => {
                 try {
-                  const response = await servicesGeolocation.getCoordinates({ params: row });
-                  return {
+                  const response = await servicesGeolocation.searchCoordenates({ 
+                    search: row.search,
+                });
+                  return  {
                     ...row,
-                    latitude: response?.[0]?.lat ?? null,
-                    longitude: response?.[0]?.lon ?? null,
-                  };
+                    latitude: response?.results?.[0]?.geometry?.lat ?? null,
+                    longitude: response?.results?.[0]?.geometry?.lng ?? null,
+                  }
                 } catch (err) {
                   console.error("Error individual:", err);
                   return {
@@ -60,7 +60,7 @@ const DataCoordenates = () => {
               });
 
               const results = await Promise.all(promises);
-            setData(results);
+              setListTable(results);
             Swal.close();
 
 
@@ -96,7 +96,7 @@ const DataCoordenates = () => {
             });
         }
 
-        setData(formattedData);
+        setListTable(formattedData);
     }
 
     const exportCoordenates= ()=> {
@@ -177,17 +177,17 @@ const DataCoordenates = () => {
             
                 <Row className="pt-2">
                 <Col xs={12} className="text-end">
-                <Button variant="secondary" disabled={data.length == 0} size="md" style={{
+                <Button variant="secondary" disabled={listTable.length == 0} size="md" style={{
                         marginRight: "10px"
                     }} onClick={exportCoordenates} >
                         Export Data
                     </Button>
-                    <Button variant="primary" disabled={data.length == 0} size="md" onClick={getCoordenates} >
+                    <Button variant="primary" disabled={listTable.length == 0} size="md" onClick={getCoordenates} >
                         Get Coordenates
                     </Button>
                 </Col>
                 <Col xs={12}>
-                    <TableModel headers={headerTablePreviewAddress} data={data}/>
+                    <TableModel headers={headerTablePreviewAddress} data={listTable}/>
                 </Col>
                
             </Row>
