@@ -100,7 +100,7 @@ const DataCoordenates = () => {
     }
 
     const exportCoordenates= ()=> {
-        const dataExport = data.map((row) => {
+        const dataExport = listTable.map((row) => {
             return [
                 row.streetOrigin,
                 row.noExt,
