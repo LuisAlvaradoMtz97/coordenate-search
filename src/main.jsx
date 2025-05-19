@@ -4,11 +4,13 @@ import { BrowserRouter } from 'react-router-dom'
 import './index.css'
 import 'leaflet/dist/leaflet.css'
 import App from './App.jsx'
-
+import { Provider } from "jotai";
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <BrowserRouter>
-    <App />
+      <Provider>
+        <App />
+      </Provider>
     </BrowserRouter>
   </StrictMode>,
 )

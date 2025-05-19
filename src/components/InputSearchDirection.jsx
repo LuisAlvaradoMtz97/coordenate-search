@@ -3,17 +3,20 @@ import { ButtonGroup, Button, Dropdown , Form} from "react-bootstrap";
 import {servicesGeolocation} from "../services/servicesGeolocation";
 import 'react-bootstrap-typeahead/css/Typeahead.css';
 
+import { useListMapAtom } from "../atoms/useListMapAtom";
+
+
 const InputSearchDirection = (props) => {   
     const { placeholder, value, onChange } = props;
+    const [listAddressMap,setListAddressMap] = useListMapAtom();
     const [viewOptions, setViewOptions] = useState(false);
     const [valueSearch, setValueSearch] = useState('');
-    const [addresses, setAddresses] = useState([]);
-
+    
     const [abortController, setAbortController] = useState(null);
     const [optionAddress, setOptionAddress] = useState([]);
     const debounceTimeoutRef = useRef(null); // Referencia para el timeout del debounce
 
-    const options = optionAddress.map((address) => `${address?.annotations?.flag} - ${address.formatted}`);
+    // const options = optionAddress.map((address) => `${address?.annotations?.flag} - ${address.formatted}`);
 
 
     //Funcion dedicada a realizar la busqueda de direcciones
@@ -40,18 +43,13 @@ const InputSearchDirection = (props) => {
   };
 
 
-    //Manda la peticion para obtener las direcciones
     const searchAddress = async () => {
       try{
-        // const controller = new AbortController();
-        // abortControllerRef.current = controller;
-
         const response = await servicesGeolocation.searchCoordenates({ 
           search: valueSearch 
       });
 
 
-      console.log("respuesta", response)
         setOptionAddress(response?.results || []);
         setViewOptions(response?.results?.length > 0);
       } catch(error){
@@ -61,7 +59,16 @@ const InputSearchDirection = (props) => {
 
     //Se agrega la direccion al listado
     const addAddress = (address) => {
-      setAddresses((prevAddresses) => [...prevAddresses, address]);
+      const newAddress = {
+        address: address.formatted,
+ 
+        coordinates: {
+          lat: address.geometry.lat,
+          lng: address.geometry.lng
+        }
+
+      }
+setListAddressMap((prevAddresses) => [...prevAddresses, newAddress]);
       setValueSearch('');
       setViewOptions(false);
     }
@@ -70,8 +77,6 @@ const InputSearchDirection = (props) => {
         <>
 <Form.Control
         type="text"
-        id="inputPassword5"
-        aria-describedby="passwordHelpBlock"
         onChange={handleAdress}
         value={valueSearch}
         className="mt-3"
